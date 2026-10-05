@@ -1,5 +1,7 @@
 # Radio FM for Orca
 
+<img src="docs/screenshot.png" alt="Radio FM panel in Orca's right sidebar, playing Jovem Pan FM São Paulo" width="300" align="right">
+
 A radio panel for the [Orca](https://github.com/stablyai/orca) IDE. Click a station in the right
 sidebar and it plays; ⏮ ⏹ ⏭ do what you'd expect.
 
@@ -13,6 +15,8 @@ FM, Kiss FM, 89 FM, Nativa, Energia 97, Massa FM, Metropolitana, Rádio Globo, C
 See [Adding stations](#adding-stations).
 
 > Orca's plugin API is experimental (`pluginApi: 1`). This plugin was built against Orca 1.4.x.
+
+<br clear="right">
 
 ## Requirements
 
