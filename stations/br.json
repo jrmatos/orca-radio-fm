@@ -1,0 +1,411 @@
+{
+  "country": "BR",
+  "countryName": "Brasil",
+  "stations": [
+    {
+      "id": "jovem-pan-fm-sao-paulo",
+      "name": "Jovem Pan FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "100.9",
+      "group": "Jovem Pan FM",
+      "url": "https://stream.zeno.fm/c45wbq2us3buv"
+    },
+    {
+      "id": "jovem-pan-fm-belo-horizonte",
+      "name": "Jovem Pan FM",
+      "city": "Belo Horizonte",
+      "state": "MG",
+      "frequency": "99.1",
+      "group": "Jovem Pan FM",
+      "url": "https://8062.brasilstream.com.br/stream"
+    },
+    {
+      "id": "jovem-pan-fm-curitiba",
+      "name": "Jovem Pan FM",
+      "city": "Curitiba",
+      "state": "PR",
+      "frequency": "103.9",
+      "group": "Jovem Pan FM",
+      "url": "https://play.wisestream.io/jpcuritiba"
+    },
+    {
+      "id": "jovem-pan-fm-florianopolis",
+      "name": "Jovem Pan FM",
+      "city": "Florianópolis",
+      "state": "SC",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://live.paineldj.com.br/proxy/jfloripa?mp=/stream"
+    },
+    {
+      "id": "jovem-pan-fm-recife",
+      "name": "Jovem Pan FM",
+      "city": "Recife",
+      "state": "PE",
+      "frequency": "95.9",
+      "group": "Jovem Pan FM",
+      "url": "https://cast4.audiostream.com.br:20004/jp95"
+    },
+    {
+      "id": "jovem-pan-fm-salvador",
+      "name": "Jovem Pan FM",
+      "city": "Salvador",
+      "state": "BA",
+      "frequency": "91.3",
+      "group": "Jovem Pan FM",
+      "url": "https://ice.fabricahost.com.br/jpsalvador"
+    },
+    {
+      "id": "jovem-pan-fm-brasilia",
+      "name": "Jovem Pan FM",
+      "city": "Brasília",
+      "state": "DF",
+      "frequency": "106.3",
+      "group": "Jovem Pan FM",
+      "url": "https://streaming.livespanel.com:21063/jovempanfm"
+    },
+    {
+      "id": "jovem-pan-fm-porto-alegre",
+      "name": "Jovem Pan FM",
+      "city": "Porto Alegre",
+      "state": "RS",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://cdn-jp907.ciclano.io:19256/stream"
+    },
+    {
+      "id": "jovem-pan-fm-goiania",
+      "name": "Jovem Pan FM",
+      "city": "Goiânia",
+      "state": "GO",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://cast4.hoost.com.br:20263/stream"
+    },
+    {
+      "id": "jovem-pan-fm-campinas",
+      "name": "Jovem Pan FM",
+      "city": "Campinas",
+      "state": "SP",
+      "frequency": "89.9",
+      "group": "Jovem Pan FM",
+      "url": "https://paineldj5.com.br:20028/stream"
+    },
+    {
+      "id": "jovem-pan-fm-natal",
+      "name": "Jovem Pan FM",
+      "city": "Natal",
+      "state": "RN",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://pannatal.jmvstream.com/stream"
+    },
+    {
+      "id": "jovem-pan-fm-manaus",
+      "name": "Jovem Pan FM",
+      "city": "Manaus",
+      "state": "AM",
+      "frequency": "104.1",
+      "group": "Jovem Pan FM",
+      "url": "https://shout25.crossradio.com.br:18022/1"
+    },
+    {
+      "id": "jovem-pan-fm-belem",
+      "name": "Jovem Pan FM",
+      "city": "Belém",
+      "state": "PA",
+      "frequency": "107.5",
+      "group": "Jovem Pan FM",
+      "url": "https://radio01.zas.media/8038/stream"
+    },
+    {
+      "id": "jovem-pan-fm-vitoria",
+      "name": "Jovem Pan FM",
+      "city": "Vitória",
+      "state": "ES",
+      "frequency": "100.1",
+      "group": "Jovem Pan FM",
+      "url": "https://streaming.livespanel.com:21011/jovempanes"
+    },
+    {
+      "id": "jovem-pan-fm-cuiaba",
+      "name": "Jovem Pan FM",
+      "city": "Cuiabá",
+      "state": "MT",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://servidor26.brlogic.com:8008/live"
+    },
+    {
+      "id": "jovem-pan-fm-sao-luis",
+      "name": "Jovem Pan FM",
+      "city": "São Luís",
+      "state": "MA",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://radio02.zas.media/proxy/jovempansaoluis/stream"
+    },
+    {
+      "id": "jovem-pan-fm-maceio",
+      "name": "Jovem Pan FM",
+      "city": "Maceió",
+      "state": "AL",
+      "frequency": "100.7",
+      "group": "Jovem Pan FM",
+      "url": "https://directradios.net/proxy/jpmaceio?mp=/stream"
+    },
+    {
+      "id": "jovem-pan-fm-londrina",
+      "name": "Jovem Pan FM",
+      "city": "Londrina",
+      "state": "PR",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://play.wisestream.io/jplondrina"
+    },
+    {
+      "id": "jovem-pan-fm-joinville",
+      "name": "Jovem Pan FM",
+      "city": "Joinville",
+      "state": "SC",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://ice.fabricahost.com.br/jpjoinville"
+    },
+    {
+      "id": "jovem-pan-fm-santos",
+      "name": "Jovem Pan FM",
+      "city": "Santos",
+      "state": "SP",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://r18.ciclano.io/proxy/radiosa4/stream"
+    },
+    {
+      "id": "jovem-pan-fm-ribeirao-preto",
+      "name": "Jovem Pan FM",
+      "city": "Ribeirão Preto",
+      "state": "SP",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://sc1s.cdn.upx.com:8130/stream"
+    },
+    {
+      "id": "jovem-pan-fm-uberlandia",
+      "name": "Jovem Pan FM",
+      "city": "Uberlândia",
+      "state": "MG",
+      "frequency": null,
+      "group": "Jovem Pan FM",
+      "url": "https://radio.saopaulo01.com.br/8236/stream"
+    },
+    {
+      "id": "jovem-pan-fm-sorocaba",
+      "name": "Jovem Pan FM",
+      "city": "Sorocaba",
+      "state": "SP",
+      "frequency": "91.1",
+      "group": "Jovem Pan FM",
+      "url": "https://cast2.hoost.com.br:8039/stream"
+    },
+    {
+      "id": "jovem-pan-news-sao-paulo",
+      "name": "Jovem Pan News",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": null,
+      "group": "Notícias e talk",
+      "url": "https://stream.zeno.fm/vlcraijc6yiuv"
+    },
+    {
+      "id": "band-fm-sao-paulo",
+      "name": "Band FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "96.1",
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/BANDFM_SPAAC.aac"
+    },
+    {
+      "id": "mix-fm-sao-paulo",
+      "name": "Mix FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": null,
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MIXFM_SAOPAULOAAC.aac"
+    },
+    {
+      "id": "mix-fm-recife",
+      "name": "Mix FM",
+      "city": "Recife",
+      "state": "PE",
+      "frequency": "97.1",
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MIXFM_RECIFE971AAC.aac"
+    },
+    {
+      "id": "mix-fm-porto-alegre",
+      "name": "Mix FM",
+      "city": "Porto Alegre",
+      "state": "RS",
+      "frequency": null,
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MIXFM_POAAAC.aac"
+    },
+    {
+      "id": "antena-1-sao-paulo",
+      "name": "Antena 1",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "94.7",
+      "group": "Música",
+      "url": "https://antenaone.crossradio.com.br/stream/1"
+    },
+    {
+      "id": "antena-1-rio-de-janeiro",
+      "name": "Antena 1",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "frequency": "103.7",
+      "group": "Música",
+      "url": "https://a1rj.streams.com.br/stream"
+    },
+    {
+      "id": "transamerica-sao-paulo",
+      "name": "Transamérica",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "100.1",
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RT_SPAAC.aac"
+    },
+    {
+      "id": "alpha-fm-sao-paulo",
+      "name": "Alpha FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "101.7",
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFM_ADP.aac"
+    },
+    {
+      "id": "kiss-fm-sao-paulo",
+      "name": "Kiss FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "92.5",
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_KISSFM_ADP.aac"
+    },
+    {
+      "id": "89-fm-a-radio-rock-sao-paulo",
+      "name": "89 FM A Rádio Rock",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": null,
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_89FM_ADP.aac"
+    },
+    {
+      "id": "nativa-fm-sao-paulo",
+      "name": "Nativa FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "95.3",
+      "group": "Música",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/NATIVA_SPAAC.aac"
+    },
+    {
+      "id": "energia-97-sao-paulo",
+      "name": "Energia 97",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": null,
+      "group": "Música",
+      "url": "https://streaming.inweb.com.br/energia"
+    },
+    {
+      "id": "massa-fm-sao-paulo",
+      "name": "Massa FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": null,
+      "group": "Música",
+      "url": "https://stm01.virtualcast.com.br:8000/massasaopaulo"
+    },
+    {
+      "id": "metropolitana-sao-paulo",
+      "name": "Metropolitana",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "98.5",
+      "group": "Música",
+      "url": "https://ice.fabricahost.com.br/metropolitana985sp"
+    },
+    {
+      "id": "radio-globo-rio-de-janeiro",
+      "name": "Rádio Globo",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "frequency": "98.1",
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_GLOBO_RJAAC.aac"
+    },
+    {
+      "id": "cbn-sao-paulo-sao-paulo",
+      "name": "CBN São Paulo",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": null,
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CBN_SPAAC.aac"
+    },
+    {
+      "id": "cbn-rio-rio-de-janeiro",
+      "name": "CBN Rio",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "frequency": "92.5",
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CBN_RJ_ADP.aac"
+    },
+    {
+      "id": "cbn-bh-belo-horizonte",
+      "name": "CBN BH",
+      "city": "Belo Horizonte",
+      "state": "MG",
+      "frequency": null,
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CBN_BHAAC.aac"
+    },
+    {
+      "id": "bandnews-fm-sao-paulo",
+      "name": "BandNews FM",
+      "city": "São Paulo",
+      "state": "SP",
+      "frequency": "96.9",
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/BANDNEWSFM_SPAAC.aac"
+    },
+    {
+      "id": "bandnews-fm-rio-de-janeiro",
+      "name": "BandNews FM",
+      "city": "Rio de Janeiro",
+      "state": "RJ",
+      "frequency": "90.3",
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/BANDNEWSFM_RJAAC.aac"
+    },
+    {
+      "id": "bandnews-fm-belo-horizonte",
+      "name": "BandNews FM",
+      "city": "Belo Horizonte",
+      "state": "MG",
+      "frequency": null,
+      "group": "Notícias e talk",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/BANDNEWSFM_BHAAC.aac"
+    }
+  ]
+}

@@ -1,0 +1,307 @@
+<!--
+  Radio FM panel. Orca renders it in a sandboxed srcdoc iframe with CSP
+  `default-src 'none'`: no network, no <audio>, no external files, so keep
+  everything inline. Buttons announce "▶ <station>" / "⏹ …" as an Orca
+  notification; daemon/radio-daemon.mjs sees it on D-Bus and plays.
+  panel/index.html is GENERATED from this file by build.mjs — edit this one.
+-->
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--background, #111);
+    color: var(--foreground, #eee);
+  }
+  .wrap { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .now {
+    border: 1px solid var(--border, #333);
+    border-radius: calc(var(--radius, 8px) + 2px);
+    background: var(--card, #181818);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .freq {
+    font: 600 11px/1 ui-monospace, monospace;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground, #999);
+  }
+  .title { font-weight: 600; font-size: 15px; }
+  .sub { color: var(--muted-foreground, #999); font-size: 12px; }
+  .eq { display: flex; gap: 3px; align-items: flex-end; height: 22px; }
+  .eq i { width: 4px; height: 4px; border-radius: 2px; background: var(--primary, #e11); opacity: .35; }
+  .playing .eq i { opacity: 1; animation: bounce 900ms ease-in-out infinite; }
+  .eq i:nth-child(2) { animation-delay: -300ms; }
+  .eq i:nth-child(3) { animation-delay: -600ms; }
+  .eq i:nth-child(4) { animation-delay: -150ms; }
+  @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 22px; } }
+  @media (prefers-reduced-motion: reduce) { .playing .eq i { animation: none; height: 14px; } }
+  .controls { display: flex; gap: 6px; }
+  .controls #toggle { flex: 1; }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border, #333);
+    background: var(--secondary, #222);
+    color: var(--secondary-foreground, #eee);
+    border-radius: var(--radius, 6px);
+    padding: 5px 10px;
+  }
+  button:hover { background: var(--accent, #2a2a2a); color: var(--accent-foreground, #fff); }
+  button.primary { background: var(--primary, #e11); color: var(--primary-foreground, #fff); border-color: transparent; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--ring, #888); outline-offset: 1px; }
+  input {
+    font: inherit;
+    width: 100%;
+    color: var(--foreground, #eee);
+    background: var(--background, #111);
+    border: 1px solid var(--input, #333);
+    border-radius: var(--radius, 6px);
+    padding: 5px 8px;
+  }
+  h2 {
+    margin: 6px 0 4px;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground, #999);
+  }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  li button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+    background: transparent;
+    border-color: transparent;
+    color: var(--foreground, #eee);
+    padding: 6px 8px;
+  }
+  li button .meta { color: var(--muted-foreground, #999); font-size: 12px; white-space: nowrap; }
+  li button.active { background: var(--accent, #2a2a2a); border-color: var(--border, #333); }
+  li button.active .name::before { content: '▶ '; color: var(--primary, #e11); }
+  .hint, .status { color: var(--muted-foreground, #999); font-size: 12px; }
+  .status:empty { display: none; }
+  .status.error { color: var(--destructive, #f55); }
+  code, kbd {
+    font: 11px ui-monospace, monospace;
+    background: var(--muted, #222);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+  details summary { cursor: pointer; color: var(--muted-foreground, #999); font-size: 12px; }
+</style>
+
+<div class="wrap">
+  <section class="now" id="now" aria-live="polite">
+    <div class="top">
+      <div>
+        <div class="freq" id="nowFreq"></div>
+        <div class="title" id="nowTitle"></div>
+        <div class="sub" id="nowSub"></div>
+      </div>
+      <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="controls">
+      <button id="prev">⏮</button>
+      <button id="toggle" class="primary"></button>
+      <button id="next">⏭</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <input type="search" id="filter" />
+
+  <div id="list"></div>
+
+  <details>
+    <summary id="howTitle"></summary>
+    <p class="hint" id="howBody"></p>
+  </details>
+</div>
+
+<script>
+  'use strict'
+  const STATIONS = [{"id":"jovem-pan-fm-sao-paulo","name":"Jovem Pan FM","city":"São Paulo","state":"SP","frequency":"100.9","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-belo-horizonte","name":"Jovem Pan FM","city":"Belo Horizonte","state":"MG","frequency":"99.1","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-curitiba","name":"Jovem Pan FM","city":"Curitiba","state":"PR","frequency":"103.9","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-florianopolis","name":"Jovem Pan FM","city":"Florianópolis","state":"SC","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-recife","name":"Jovem Pan FM","city":"Recife","state":"PE","frequency":"95.9","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-salvador","name":"Jovem Pan FM","city":"Salvador","state":"BA","frequency":"91.3","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-brasilia","name":"Jovem Pan FM","city":"Brasília","state":"DF","frequency":"106.3","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-porto-alegre","name":"Jovem Pan FM","city":"Porto Alegre","state":"RS","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-goiania","name":"Jovem Pan FM","city":"Goiânia","state":"GO","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-campinas","name":"Jovem Pan FM","city":"Campinas","state":"SP","frequency":"89.9","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-natal","name":"Jovem Pan FM","city":"Natal","state":"RN","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-manaus","name":"Jovem Pan FM","city":"Manaus","state":"AM","frequency":"104.1","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-belem","name":"Jovem Pan FM","city":"Belém","state":"PA","frequency":"107.5","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-vitoria","name":"Jovem Pan FM","city":"Vitória","state":"ES","frequency":"100.1","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-cuiaba","name":"Jovem Pan FM","city":"Cuiabá","state":"MT","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-sao-luis","name":"Jovem Pan FM","city":"São Luís","state":"MA","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-maceio","name":"Jovem Pan FM","city":"Maceió","state":"AL","frequency":"100.7","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-londrina","name":"Jovem Pan FM","city":"Londrina","state":"PR","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-joinville","name":"Jovem Pan FM","city":"Joinville","state":"SC","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-santos","name":"Jovem Pan FM","city":"Santos","state":"SP","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-ribeirao-preto","name":"Jovem Pan FM","city":"Ribeirão Preto","state":"SP","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-uberlandia","name":"Jovem Pan FM","city":"Uberlândia","state":"MG","frequency":null,"group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-fm-sorocaba","name":"Jovem Pan FM","city":"Sorocaba","state":"SP","frequency":"91.1","group":"Jovem Pan FM","country":"BR","countryName":"Brasil"},{"id":"jovem-pan-news-sao-paulo","name":"Jovem Pan News","city":"São Paulo","state":"SP","frequency":null,"group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"band-fm-sao-paulo","name":"Band FM","city":"São Paulo","state":"SP","frequency":"96.1","group":"Música","country":"BR","countryName":"Brasil"},{"id":"mix-fm-sao-paulo","name":"Mix FM","city":"São Paulo","state":"SP","frequency":null,"group":"Música","country":"BR","countryName":"Brasil"},{"id":"mix-fm-recife","name":"Mix FM","city":"Recife","state":"PE","frequency":"97.1","group":"Música","country":"BR","countryName":"Brasil"},{"id":"mix-fm-porto-alegre","name":"Mix FM","city":"Porto Alegre","state":"RS","frequency":null,"group":"Música","country":"BR","countryName":"Brasil"},{"id":"antena-1-sao-paulo","name":"Antena 1","city":"São Paulo","state":"SP","frequency":"94.7","group":"Música","country":"BR","countryName":"Brasil"},{"id":"antena-1-rio-de-janeiro","name":"Antena 1","city":"Rio de Janeiro","state":"RJ","frequency":"103.7","group":"Música","country":"BR","countryName":"Brasil"},{"id":"transamerica-sao-paulo","name":"Transamérica","city":"São Paulo","state":"SP","frequency":"100.1","group":"Música","country":"BR","countryName":"Brasil"},{"id":"alpha-fm-sao-paulo","name":"Alpha FM","city":"São Paulo","state":"SP","frequency":"101.7","group":"Música","country":"BR","countryName":"Brasil"},{"id":"kiss-fm-sao-paulo","name":"Kiss FM","city":"São Paulo","state":"SP","frequency":"92.5","group":"Música","country":"BR","countryName":"Brasil"},{"id":"89-fm-a-radio-rock-sao-paulo","name":"89 FM A Rádio Rock","city":"São Paulo","state":"SP","frequency":null,"group":"Música","country":"BR","countryName":"Brasil"},{"id":"nativa-fm-sao-paulo","name":"Nativa FM","city":"São Paulo","state":"SP","frequency":"95.3","group":"Música","country":"BR","countryName":"Brasil"},{"id":"energia-97-sao-paulo","name":"Energia 97","city":"São Paulo","state":"SP","frequency":null,"group":"Música","country":"BR","countryName":"Brasil"},{"id":"massa-fm-sao-paulo","name":"Massa FM","city":"São Paulo","state":"SP","frequency":null,"group":"Música","country":"BR","countryName":"Brasil"},{"id":"metropolitana-sao-paulo","name":"Metropolitana","city":"São Paulo","state":"SP","frequency":"98.5","group":"Música","country":"BR","countryName":"Brasil"},{"id":"radio-globo-rio-de-janeiro","name":"Rádio Globo","city":"Rio de Janeiro","state":"RJ","frequency":"98.1","group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"cbn-sao-paulo-sao-paulo","name":"CBN São Paulo","city":"São Paulo","state":"SP","frequency":null,"group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"cbn-rio-rio-de-janeiro","name":"CBN Rio","city":"Rio de Janeiro","state":"RJ","frequency":"92.5","group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"cbn-bh-belo-horizonte","name":"CBN BH","city":"Belo Horizonte","state":"MG","frequency":null,"group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"bandnews-fm-sao-paulo","name":"BandNews FM","city":"São Paulo","state":"SP","frequency":"96.9","group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"bandnews-fm-rio-de-janeiro","name":"BandNews FM","city":"Rio de Janeiro","state":"RJ","frequency":"90.3","group":"Notícias e talk","country":"BR","countryName":"Brasil"},{"id":"bandnews-fm-belo-horizonte","name":"BandNews FM","city":"Belo Horizonte","state":"MG","frequency":null,"group":"Notícias e talk","country":"BR","countryName":"Brasil"}]
+
+  const PT = /^pt/i.test(navigator.language || '')
+  const T = PT
+    ? {
+        brand: 'Rádio FM', pick: 'Escolha uma rádio', idle: 'Nada tocando', live: 'Ao vivo',
+        stopped: 'parado', play: '▶ Tocar', stop: '⏹ Parar', prev: 'Estação anterior',
+        next: 'Próxima estação', search: 'Buscar rádio, cidade ou país…', none: 'Nenhuma rádio encontrada.',
+        stopTitle: '⏹ Parar rádio', noNotify: 'Notificações do sistema indisponíveis — use a paleta “Radio:”.',
+        timeout: 'Orca não respondeu', howTitle: 'Como funciona',
+        howBody: 'O painel do Orca não pode tocar áudio. Cada botão mostra uma notificação do Orca, e o serviço <code>orca-radio-fm</code> (daemon/install.sh) a recebe e toca a rádio com mpv/ffplay/vlc. Sem o serviço, use a paleta (<code>Radio:</code>) ou <kbd>Ctrl+Alt+Shift+P</kbd> / <kbd>N</kbd> / <kbd>B</kbd>.'
+      }
+    : {
+        brand: 'Radio FM', pick: 'Pick a station', idle: 'Nothing playing', live: 'Live',
+        stopped: 'stopped', play: '▶ Play', stop: '⏹ Stop', prev: 'Previous station',
+        next: 'Next station', search: 'Search station, city or country…', none: 'No stations found.',
+        stopTitle: '⏹ Stop radio', noNotify: 'System notifications unavailable — use the "Radio:" palette commands.',
+        timeout: 'Orca did not respond', howTitle: 'How it works',
+        howBody: 'Orca panels cannot play audio. Each button shows an Orca notification; the <code>orca-radio-fm</code> service (daemon/install.sh) picks it up and plays the station with mpv/ffplay/vlc. Without the service, use the palette (<code>Radio:</code>) or <kbd>Ctrl+Alt+Shift+P</kbd> / <kbd>N</kbd> / <kbd>B</kbd>.'
+      }
+
+  const $ = (id) => document.getElementById(id)
+  // `selected` survives a stop so ▶ resumes it; `playing` is what we last asked for.
+  const state = { selected: null, playing: false, filter: '' }
+  const pending = new Map()
+  let seq = 0
+
+  // Must match stationLabel() in player.mjs: the daemon maps this label back to a stream.
+  const stationLabel = (s) => (s.city && !s.name.includes(s.city) ? `${s.name} — ${s.city}` : s.name)
+  const multiCountry = new Set(STATIONS.map((s) => s.country)).size > 1
+  const groupKey = (s) => (multiCountry ? `${s.countryName || s.country} · ${s.group}` : s.group)
+  // A group where every station has the same name is a network (e.g. Jovem Pan FM):
+  // list its stations by city instead of repeating the name.
+  const networks = new Set()
+  {
+    const names = new Map()
+    for (const s of STATIONS) {
+      const key = groupKey(s)
+      if (!names.has(key)) names.set(key, new Set())
+      names.get(key).add(s.name)
+    }
+    for (const [key, set] of names) if (set.size === 1) networks.add(key)
+  }
+
+  function call(action, params) {
+    const requestId = `r${++seq}`
+    return new Promise((resolve, reject) => {
+      pending.set(requestId, { resolve, reject })
+      window.parent.postMessage({ type: 'orca-panel-action', requestId, action, params }, '*')
+      setTimeout(() => {
+        if (pending.delete(requestId)) reject(new Error(T.timeout))
+      }, 10000)
+    })
+  }
+
+  window.addEventListener('message', (event) => {
+    const data = event.data
+    if (event.source !== window.parent || !data || data.type !== 'orca-panel-action-result') return
+    const entry = pending.get(data.requestId)
+    if (!entry) return
+    pending.delete(data.requestId)
+    data.ok ? entry.resolve(data.value) : entry.reject(new Error(data.error || data.errorCode))
+  })
+
+  function setStatus(text, isError) {
+    const el = $('status')
+    el.textContent = text || ''
+    el.classList.toggle('error', !!isError)
+  }
+
+  async function announce(title) {
+    try {
+      const result = await call('notifications.show', { title, body: T.brand })
+      if (result && result.delivered === false) {
+        setStatus(T.noNotify, true)
+        return false
+      }
+      setStatus('')
+      return true
+    } catch (error) {
+      setStatus(error.message, true)
+      return false
+    }
+  }
+
+  async function play(index) {
+    state.selected = index
+    state.playing = true
+    render()
+    if (!(await announce(`▶ ${stationLabel(STATIONS[index])}`))) {
+      state.playing = false
+      render()
+    }
+  }
+
+  async function stop() {
+    state.playing = false
+    render()
+    await announce(T.stopTitle)
+  }
+
+  function step(delta) {
+    const base = state.selected ?? -1
+    play((base + delta + STATIONS.length) % STATIONS.length)
+  }
+
+  function render() {
+    const station = state.selected === null ? null : STATIONS[state.selected]
+    $('now').classList.toggle('playing', state.playing)
+    $('nowFreq').textContent = station
+      ? [station.frequency, station.state, multiCountry ? station.country : null].filter(Boolean).join(' · ') || T.live
+      : T.brand
+    $('nowTitle').textContent = station ? station.name : T.pick
+    $('nowSub').textContent = station ? `${station.city || T.live}${state.playing ? '' : ` · ${T.stopped}`}` : T.idle
+    $('toggle').textContent = state.playing ? T.stop : T.play
+
+    const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    const q = norm(state.filter.trim())
+    const groups = new Map()
+    STATIONS.forEach((s, index) => {
+      const haystack = norm(`${s.name} ${s.city} ${s.state} ${s.group} ${s.country} ${s.countryName}`)
+      if (q && !haystack.includes(q)) return
+      const key = groupKey(s)
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push({ s, index })
+    })
+
+    const list = $('list')
+    list.textContent = ''
+    if (!groups.size) {
+      const p = document.createElement('p')
+      p.className = 'hint'
+      p.textContent = T.none
+      list.append(p)
+      return
+    }
+    for (const [key, items] of groups) {
+      const network = networks.has(key)
+      const h = document.createElement('h2')
+      h.textContent = key
+      const ul = document.createElement('ul')
+      for (const { s, index } of items) {
+        const li = document.createElement('li')
+        const b = document.createElement('button')
+        b.className = state.playing && index === state.selected ? 'active' : ''
+        const name = document.createElement('span')
+        name.className = 'name'
+        name.textContent = network && s.city ? s.city : s.name
+        const meta = document.createElement('span')
+        meta.className = 'meta'
+        meta.textContent = [s.frequency, network ? s.state : s.city].filter(Boolean).join(' · ')
+        b.append(name, meta)
+        b.addEventListener('click', () => play(index))
+        li.append(b)
+        ul.append(li)
+      }
+      list.append(h, ul)
+    }
+  }
+
+  $('prev').title = $('prev').ariaLabel = T.prev
+  $('next').title = $('next').ariaLabel = T.next
+  $('filter').placeholder = T.search
+  $('filter').setAttribute('aria-label', T.search)
+  $('howTitle').textContent = T.howTitle
+  $('howBody').innerHTML = T.howBody
+
+  $('filter').addEventListener('input', (e) => {
+    state.filter = e.target.value
+    render()
+  })
+  $('toggle').addEventListener('click', () => (state.playing ? stop() : play(state.selected ?? 0)))
+  $('next').addEventListener('click', () => step(1))
+  $('prev').addEventListener('click', () => step(-1))
+
+  render()
+</script>

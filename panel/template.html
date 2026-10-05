@@ -1,0 +1,307 @@
+<!--
+  Radio FM panel. Orca renders it in a sandboxed srcdoc iframe with CSP
+  `default-src 'none'`: no network, no <audio>, no external files, so keep
+  everything inline. Buttons announce "▶ <station>" / "⏹ …" as an Orca
+  notification; daemon/radio-daemon.mjs sees it on D-Bus and plays.
+  panel/index.html is GENERATED from this file by build.mjs — edit this one.
+-->
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--background, #111);
+    color: var(--foreground, #eee);
+  }
+  .wrap { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .now {
+    border: 1px solid var(--border, #333);
+    border-radius: calc(var(--radius, 8px) + 2px);
+    background: var(--card, #181818);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .freq {
+    font: 600 11px/1 ui-monospace, monospace;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground, #999);
+  }
+  .title { font-weight: 600; font-size: 15px; }
+  .sub { color: var(--muted-foreground, #999); font-size: 12px; }
+  .eq { display: flex; gap: 3px; align-items: flex-end; height: 22px; }
+  .eq i { width: 4px; height: 4px; border-radius: 2px; background: var(--primary, #e11); opacity: .35; }
+  .playing .eq i { opacity: 1; animation: bounce 900ms ease-in-out infinite; }
+  .eq i:nth-child(2) { animation-delay: -300ms; }
+  .eq i:nth-child(3) { animation-delay: -600ms; }
+  .eq i:nth-child(4) { animation-delay: -150ms; }
+  @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 22px; } }
+  @media (prefers-reduced-motion: reduce) { .playing .eq i { animation: none; height: 14px; } }
+  .controls { display: flex; gap: 6px; }
+  .controls #toggle { flex: 1; }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border, #333);
+    background: var(--secondary, #222);
+    color: var(--secondary-foreground, #eee);
+    border-radius: var(--radius, 6px);
+    padding: 5px 10px;
+  }
+  button:hover { background: var(--accent, #2a2a2a); color: var(--accent-foreground, #fff); }
+  button.primary { background: var(--primary, #e11); color: var(--primary-foreground, #fff); border-color: transparent; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--ring, #888); outline-offset: 1px; }
+  input {
+    font: inherit;
+    width: 100%;
+    color: var(--foreground, #eee);
+    background: var(--background, #111);
+    border: 1px solid var(--input, #333);
+    border-radius: var(--radius, 6px);
+    padding: 5px 8px;
+  }
+  h2 {
+    margin: 6px 0 4px;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground, #999);
+  }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  li button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+    background: transparent;
+    border-color: transparent;
+    color: var(--foreground, #eee);
+    padding: 6px 8px;
+  }
+  li button .meta { color: var(--muted-foreground, #999); font-size: 12px; white-space: nowrap; }
+  li button.active { background: var(--accent, #2a2a2a); border-color: var(--border, #333); }
+  li button.active .name::before { content: '▶ '; color: var(--primary, #e11); }
+  .hint, .status { color: var(--muted-foreground, #999); font-size: 12px; }
+  .status:empty { display: none; }
+  .status.error { color: var(--destructive, #f55); }
+  code, kbd {
+    font: 11px ui-monospace, monospace;
+    background: var(--muted, #222);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+  details summary { cursor: pointer; color: var(--muted-foreground, #999); font-size: 12px; }
+</style>
+
+<div class="wrap">
+  <section class="now" id="now" aria-live="polite">
+    <div class="top">
+      <div>
+        <div class="freq" id="nowFreq"></div>
+        <div class="title" id="nowTitle"></div>
+        <div class="sub" id="nowSub"></div>
+      </div>
+      <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="controls">
+      <button id="prev">⏮</button>
+      <button id="toggle" class="primary"></button>
+      <button id="next">⏭</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <input type="search" id="filter" />
+
+  <div id="list"></div>
+
+  <details>
+    <summary id="howTitle"></summary>
+    <p class="hint" id="howBody"></p>
+  </details>
+</div>
+
+<script>
+  'use strict'
+  const STATIONS = /*__STATIONS__*/ []
+
+  const PT = /^pt/i.test(navigator.language || '')
+  const T = PT
+    ? {
+        brand: 'Rádio FM', pick: 'Escolha uma rádio', idle: 'Nada tocando', live: 'Ao vivo',
+        stopped: 'parado', play: '▶ Tocar', stop: '⏹ Parar', prev: 'Estação anterior',
+        next: 'Próxima estação', search: 'Buscar rádio, cidade ou país…', none: 'Nenhuma rádio encontrada.',
+        stopTitle: '⏹ Parar rádio', noNotify: 'Notificações do sistema indisponíveis — use a paleta “Radio:”.',
+        timeout: 'Orca não respondeu', howTitle: 'Como funciona',
+        howBody: 'O painel do Orca não pode tocar áudio. Cada botão mostra uma notificação do Orca, e o serviço <code>orca-radio-fm</code> (daemon/install.sh) a recebe e toca a rádio com mpv/ffplay/vlc. Sem o serviço, use a paleta (<code>Radio:</code>) ou <kbd>Ctrl+Alt+Shift+P</kbd> / <kbd>N</kbd> / <kbd>B</kbd>.'
+      }
+    : {
+        brand: 'Radio FM', pick: 'Pick a station', idle: 'Nothing playing', live: 'Live',
+        stopped: 'stopped', play: '▶ Play', stop: '⏹ Stop', prev: 'Previous station',
+        next: 'Next station', search: 'Search station, city or country…', none: 'No stations found.',
+        stopTitle: '⏹ Stop radio', noNotify: 'System notifications unavailable — use the "Radio:" palette commands.',
+        timeout: 'Orca did not respond', howTitle: 'How it works',
+        howBody: 'Orca panels cannot play audio. Each button shows an Orca notification; the <code>orca-radio-fm</code> service (daemon/install.sh) picks it up and plays the station with mpv/ffplay/vlc. Without the service, use the palette (<code>Radio:</code>) or <kbd>Ctrl+Alt+Shift+P</kbd> / <kbd>N</kbd> / <kbd>B</kbd>.'
+      }
+
+  const $ = (id) => document.getElementById(id)
+  // `selected` survives a stop so ▶ resumes it; `playing` is what we last asked for.
+  const state = { selected: null, playing: false, filter: '' }
+  const pending = new Map()
+  let seq = 0
+
+  // Must match stationLabel() in player.mjs: the daemon maps this label back to a stream.
+  const stationLabel = (s) => (s.city && !s.name.includes(s.city) ? `${s.name} — ${s.city}` : s.name)
+  const multiCountry = new Set(STATIONS.map((s) => s.country)).size > 1
+  const groupKey = (s) => (multiCountry ? `${s.countryName || s.country} · ${s.group}` : s.group)
+  // A group where every station has the same name is a network (e.g. Jovem Pan FM):
+  // list its stations by city instead of repeating the name.
+  const networks = new Set()
+  {
+    const names = new Map()
+    for (const s of STATIONS) {
+      const key = groupKey(s)
+      if (!names.has(key)) names.set(key, new Set())
+      names.get(key).add(s.name)
+    }
+    for (const [key, set] of names) if (set.size === 1) networks.add(key)
+  }
+
+  function call(action, params) {
+    const requestId = `r${++seq}`
+    return new Promise((resolve, reject) => {
+      pending.set(requestId, { resolve, reject })
+      window.parent.postMessage({ type: 'orca-panel-action', requestId, action, params }, '*')
+      setTimeout(() => {
+        if (pending.delete(requestId)) reject(new Error(T.timeout))
+      }, 10000)
+    })
+  }
+
+  window.addEventListener('message', (event) => {
+    const data = event.data
+    if (event.source !== window.parent || !data || data.type !== 'orca-panel-action-result') return
+    const entry = pending.get(data.requestId)
+    if (!entry) return
+    pending.delete(data.requestId)
+    data.ok ? entry.resolve(data.value) : entry.reject(new Error(data.error || data.errorCode))
+  })
+
+  function setStatus(text, isError) {
+    const el = $('status')
+    el.textContent = text || ''
+    el.classList.toggle('error', !!isError)
+  }
+
+  async function announce(title) {
+    try {
+      const result = await call('notifications.show', { title, body: T.brand })
+      if (result && result.delivered === false) {
+        setStatus(T.noNotify, true)
+        return false
+      }
+      setStatus('')
+      return true
+    } catch (error) {
+      setStatus(error.message, true)
+      return false
+    }
+  }
+
+  async function play(index) {
+    state.selected = index
+    state.playing = true
+    render()
+    if (!(await announce(`▶ ${stationLabel(STATIONS[index])}`))) {
+      state.playing = false
+      render()
+    }
+  }
+
+  async function stop() {
+    state.playing = false
+    render()
+    await announce(T.stopTitle)
+  }
+
+  function step(delta) {
+    const base = state.selected ?? -1
+    play((base + delta + STATIONS.length) % STATIONS.length)
+  }
+
+  function render() {
+    const station = state.selected === null ? null : STATIONS[state.selected]
+    $('now').classList.toggle('playing', state.playing)
+    $('nowFreq').textContent = station
+      ? [station.frequency, station.state, multiCountry ? station.country : null].filter(Boolean).join(' · ') || T.live
+      : T.brand
+    $('nowTitle').textContent = station ? station.name : T.pick
+    $('nowSub').textContent = station ? `${station.city || T.live}${state.playing ? '' : ` · ${T.stopped}`}` : T.idle
+    $('toggle').textContent = state.playing ? T.stop : T.play
+
+    const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    const q = norm(state.filter.trim())
+    const groups = new Map()
+    STATIONS.forEach((s, index) => {
+      const haystack = norm(`${s.name} ${s.city} ${s.state} ${s.group} ${s.country} ${s.countryName}`)
+      if (q && !haystack.includes(q)) return
+      const key = groupKey(s)
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push({ s, index })
+    })
+
+    const list = $('list')
+    list.textContent = ''
+    if (!groups.size) {
+      const p = document.createElement('p')
+      p.className = 'hint'
+      p.textContent = T.none
+      list.append(p)
+      return
+    }
+    for (const [key, items] of groups) {
+      const network = networks.has(key)
+      const h = document.createElement('h2')
+      h.textContent = key
+      const ul = document.createElement('ul')
+      for (const { s, index } of items) {
+        const li = document.createElement('li')
+        const b = document.createElement('button')
+        b.className = state.playing && index === state.selected ? 'active' : ''
+        const name = document.createElement('span')
+        name.className = 'name'
+        name.textContent = network && s.city ? s.city : s.name
+        const meta = document.createElement('span')
+        meta.className = 'meta'
+        meta.textContent = [s.frequency, network ? s.state : s.city].filter(Boolean).join(' · ')
+        b.append(name, meta)
+        b.addEventListener('click', () => play(index))
+        li.append(b)
+        ul.append(li)
+      }
+      list.append(h, ul)
+    }
+  }
+
+  $('prev').title = $('prev').ariaLabel = T.prev
+  $('next').title = $('next').ariaLabel = T.next
+  $('filter').placeholder = T.search
+  $('filter').setAttribute('aria-label', T.search)
+  $('howTitle').textContent = T.howTitle
+  $('howBody').innerHTML = T.howBody
+
+  $('filter').addEventListener('input', (e) => {
+    state.filter = e.target.value
+    render()
+  })
+  $('toggle').addEventListener('click', () => (state.playing ? stop() : play(state.selected ?? 0)))
+  $('next').addEventListener('click', () => step(1))
+  $('prev').addEventListener('click', () => step(-1))
+
+  render()
+</script>

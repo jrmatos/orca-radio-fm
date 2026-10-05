@@ -1,0 +1,248 @@
+{
+  "manifestVersion": 1,
+  "id": "radio-fm",
+  "publisher": "jrmatos",
+  "name": "Radio FM",
+  "version": "1.0.0",
+  "description": "Radio panel for Orca: Jovem Pan FM in 23 Brazilian cities plus other stations, easy to extend with radios from any country. Plays through mpv, ffplay or vlc.",
+  "author": {
+    "name": "Paulo Matos",
+    "url": "https://github.com/jrmatos"
+  },
+  "repository": "https://github.com/jrmatos/orca-radio-fm",
+  "engines": {
+    "orca": ">=1.4.0"
+  },
+  "pluginApi": 1,
+  "main": "worker.mjs",
+  "contributes": {
+    "panels": [
+      {
+        "id": "radio",
+        "title": "Radio FM",
+        "icon": "activity",
+        "entry": "panel/index.html"
+      }
+    ],
+    "commands": [
+      {
+        "id": "toggle",
+        "title": "Radio: Play / Stop"
+      },
+      {
+        "id": "stop",
+        "title": "Radio: Stop"
+      },
+      {
+        "id": "next",
+        "title": "Radio: Next station"
+      },
+      {
+        "id": "previous",
+        "title": "Radio: Previous station"
+      },
+      {
+        "id": "play.jovem-pan-fm-sao-paulo",
+        "title": "Radio: Jovem Pan FM — São Paulo"
+      },
+      {
+        "id": "play.jovem-pan-fm-belo-horizonte",
+        "title": "Radio: Jovem Pan FM — Belo Horizonte"
+      },
+      {
+        "id": "play.jovem-pan-fm-curitiba",
+        "title": "Radio: Jovem Pan FM — Curitiba"
+      },
+      {
+        "id": "play.jovem-pan-fm-florianopolis",
+        "title": "Radio: Jovem Pan FM — Florianópolis"
+      },
+      {
+        "id": "play.jovem-pan-fm-recife",
+        "title": "Radio: Jovem Pan FM — Recife"
+      },
+      {
+        "id": "play.jovem-pan-fm-salvador",
+        "title": "Radio: Jovem Pan FM — Salvador"
+      },
+      {
+        "id": "play.jovem-pan-fm-brasilia",
+        "title": "Radio: Jovem Pan FM — Brasília"
+      },
+      {
+        "id": "play.jovem-pan-fm-porto-alegre",
+        "title": "Radio: Jovem Pan FM — Porto Alegre"
+      },
+      {
+        "id": "play.jovem-pan-fm-goiania",
+        "title": "Radio: Jovem Pan FM — Goiânia"
+      },
+      {
+        "id": "play.jovem-pan-fm-campinas",
+        "title": "Radio: Jovem Pan FM — Campinas"
+      },
+      {
+        "id": "play.jovem-pan-fm-natal",
+        "title": "Radio: Jovem Pan FM — Natal"
+      },
+      {
+        "id": "play.jovem-pan-fm-manaus",
+        "title": "Radio: Jovem Pan FM — Manaus"
+      },
+      {
+        "id": "play.jovem-pan-fm-belem",
+        "title": "Radio: Jovem Pan FM — Belém"
+      },
+      {
+        "id": "play.jovem-pan-fm-vitoria",
+        "title": "Radio: Jovem Pan FM — Vitória"
+      },
+      {
+        "id": "play.jovem-pan-fm-cuiaba",
+        "title": "Radio: Jovem Pan FM — Cuiabá"
+      },
+      {
+        "id": "play.jovem-pan-fm-sao-luis",
+        "title": "Radio: Jovem Pan FM — São Luís"
+      },
+      {
+        "id": "play.jovem-pan-fm-maceio",
+        "title": "Radio: Jovem Pan FM — Maceió"
+      },
+      {
+        "id": "play.jovem-pan-fm-londrina",
+        "title": "Radio: Jovem Pan FM — Londrina"
+      },
+      {
+        "id": "play.jovem-pan-fm-joinville",
+        "title": "Radio: Jovem Pan FM — Joinville"
+      },
+      {
+        "id": "play.jovem-pan-fm-santos",
+        "title": "Radio: Jovem Pan FM — Santos"
+      },
+      {
+        "id": "play.jovem-pan-fm-ribeirao-preto",
+        "title": "Radio: Jovem Pan FM — Ribeirão Preto"
+      },
+      {
+        "id": "play.jovem-pan-fm-uberlandia",
+        "title": "Radio: Jovem Pan FM — Uberlândia"
+      },
+      {
+        "id": "play.jovem-pan-fm-sorocaba",
+        "title": "Radio: Jovem Pan FM — Sorocaba"
+      },
+      {
+        "id": "play.jovem-pan-news-sao-paulo",
+        "title": "Radio: Jovem Pan News — São Paulo"
+      },
+      {
+        "id": "play.band-fm-sao-paulo",
+        "title": "Radio: Band FM — São Paulo"
+      },
+      {
+        "id": "play.mix-fm-sao-paulo",
+        "title": "Radio: Mix FM — São Paulo"
+      },
+      {
+        "id": "play.mix-fm-recife",
+        "title": "Radio: Mix FM — Recife"
+      },
+      {
+        "id": "play.mix-fm-porto-alegre",
+        "title": "Radio: Mix FM — Porto Alegre"
+      },
+      {
+        "id": "play.antena-1-sao-paulo",
+        "title": "Radio: Antena 1 — São Paulo"
+      },
+      {
+        "id": "play.antena-1-rio-de-janeiro",
+        "title": "Radio: Antena 1 — Rio de Janeiro"
+      },
+      {
+        "id": "play.transamerica-sao-paulo",
+        "title": "Radio: Transamérica — São Paulo"
+      },
+      {
+        "id": "play.alpha-fm-sao-paulo",
+        "title": "Radio: Alpha FM — São Paulo"
+      },
+      {
+        "id": "play.kiss-fm-sao-paulo",
+        "title": "Radio: Kiss FM — São Paulo"
+      },
+      {
+        "id": "play.89-fm-a-radio-rock-sao-paulo",
+        "title": "Radio: 89 FM A Rádio Rock — São Paulo"
+      },
+      {
+        "id": "play.nativa-fm-sao-paulo",
+        "title": "Radio: Nativa FM — São Paulo"
+      },
+      {
+        "id": "play.energia-97-sao-paulo",
+        "title": "Radio: Energia 97 — São Paulo"
+      },
+      {
+        "id": "play.massa-fm-sao-paulo",
+        "title": "Radio: Massa FM — São Paulo"
+      },
+      {
+        "id": "play.metropolitana-sao-paulo",
+        "title": "Radio: Metropolitana — São Paulo"
+      },
+      {
+        "id": "play.radio-globo-rio-de-janeiro",
+        "title": "Radio: Rádio Globo — Rio de Janeiro"
+      },
+      {
+        "id": "play.cbn-sao-paulo-sao-paulo",
+        "title": "Radio: CBN São Paulo"
+      },
+      {
+        "id": "play.cbn-rio-rio-de-janeiro",
+        "title": "Radio: CBN Rio — Rio de Janeiro"
+      },
+      {
+        "id": "play.cbn-bh-belo-horizonte",
+        "title": "Radio: CBN BH — Belo Horizonte"
+      },
+      {
+        "id": "play.bandnews-fm-sao-paulo",
+        "title": "Radio: BandNews FM — São Paulo"
+      },
+      {
+        "id": "play.bandnews-fm-rio-de-janeiro",
+        "title": "Radio: BandNews FM — Rio de Janeiro"
+      },
+      {
+        "id": "play.bandnews-fm-belo-horizonte",
+        "title": "Radio: BandNews FM — Belo Horizonte"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "toggle",
+        "key": "Mod+Alt+Shift+P"
+      },
+      {
+        "command": "next",
+        "key": "Mod+Alt+Shift+N"
+      },
+      {
+        "command": "previous",
+        "key": "Mod+Alt+Shift+B"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "notifications:show"
+    },
+    {
+      "kind": "storage"
+    }
+  ]
+}

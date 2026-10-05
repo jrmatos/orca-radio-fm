@@ -1,0 +1,17 @@
+{
+  "name": "orca-radio-fm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Orca plugin: radio panel with Brazilian FM stations (Jovem Pan by city and more), open to radios from any country",
+  "license": "MIT",
+  "repository": "github:jrmatos/orca-radio-fm",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node scripts/check-streams.mjs",
+    "find": "node scripts/find-station.mjs"
+  }
+}

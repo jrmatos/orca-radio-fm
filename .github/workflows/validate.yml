@@ -1,0 +1,19 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  stations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate stations and check generated files are up to date
+        run: node build.mjs --check
+      - name: Syntax-check scripts
+        run: for f in *.mjs daemon/*.mjs scripts/*.mjs; do node --check "$f"; done
