@@ -37,6 +37,8 @@ const manifest = {
       { id: 'stop', title: 'Radio: Stop' },
       { id: 'next', title: 'Radio: Next station' },
       { id: 'previous', title: 'Radio: Previous station' },
+      { id: 'volume-up', title: 'Radio: Volume up' },
+      { id: 'volume-down', title: 'Radio: Volume down' },
       ...stations.map((s) => ({ id: `play.${s.id}`, title: `Radio: ${stationLabel(s)}` }))
     ],
     keybindings: [

@@ -23,6 +23,7 @@ See [Adding stations](#adding-stations).
 - Orca ≥ 1.4.0 with plugins enabled
 - An audio player on `PATH`: [mpv](https://mpv.io), `ffplay` (part of [FFmpeg](https://ffmpeg.org)) or `cvlc` ([VLC](https://www.videolan.org)). They are tried in that order.
 - For the **panel buttons**: Linux with systemd and a desktop notification service (GNOME, KDE, …), plus Node.js ≥ 20 and `dbus-monitor`
+- For **volume control**: PipeWire with `wpctl` and `pw-dump`, the default audio stack on current Ubuntu, Fedora and Arch
 - Command palette and shortcuts work without the daemon, on Linux and macOS
 
 ## Install
@@ -36,7 +37,7 @@ cd orca-radio-fm
 Then in Orca:
 
 1. **Settings → Plugins → Development → Add path** and enter the full path of the cloned folder.
-   (Alternatively, **Install plugin → Git URL** with `https://github.com/jrmatos/orca-radio-fm#v1.0.0`.
+   (Alternatively, **Install plugin → Git URL** with `https://github.com/jrmatos/orca-radio-fm#v1.1.0`.
    That gives you the palette and shortcuts. The daemon still needs a clone.)
 2. Review the permissions (notifications, plugin storage) and click **Enable plugin**.
 3. Open the **Radio FM** tab in the right sidebar. Its icon is a waveform; if the sidebar is
@@ -46,10 +47,11 @@ Then in Orca:
 
 | How | What |
 | --- | --- |
-| Panel | Click a station to play it. ⏮ / ▶ ⏹ / ⏭ control playback. The search box filters by name, city or country. |
+| Panel | Click a station to play it. ⏮ / ▶ ⏹ / ⏭ control playback, and the slider sets the radio's own volume. The search box filters by name, city or country. |
 | Command palette | Search `Radio:` to get one command per station, plus Play / Stop, Next and Previous. |
 | `Ctrl+Alt+Shift+P` | Play / stop (resumes the last station) |
 | `Ctrl+Alt+Shift+N` / `B` | Next / previous station |
+| Volume | The panel slider, or the `Radio: Volume up` / `Radio: Volume down` palette commands (±10%) |
 | Emergency stop | `pkill -f orca-radio-fm-player` |
 
 The panel text is in Portuguese on pt-* systems and in English everywhere else.
@@ -70,6 +72,12 @@ media, and panels cannot call the plugin's background worker. So audio never pla
 Both start the player detached and tag it `orca-radio-fm-player`
 ([`player.mjs`](player.mjs)), so either path can stop what the other started, and music keeps
 playing when Orca recycles its idle worker.
+
+**Volume only affects the radio.** The player's audio stream is named `Orca Radio`, and the slider
+changes that stream's PipeWire volume (`wpctl set-volume <node>`). Your system volume and other
+apps are never touched. The level is saved in `~/.local/state/orca-radio-fm/state.json` and
+applied to every new station. The panel can't read the saved level back, so after the panel
+reloads, the slider shows the real level only once you move it.
 
 Daemon logs: `journalctl --user -u orca-radio-fm -f`. Uninstall:
 

@@ -64,7 +64,8 @@ contribution.
 
 ## Changing the code
 
-- `player.mjs`: loading and validating stations, and starting and stopping the player.
+- `player.mjs`: loading and validating stations, starting and stopping the player, and the
+  per-stream volume (PipeWire, stream named `Orca Radio`).
 - `worker.mjs`: the Orca plugin worker behind the palette commands and shortcuts.
 - `daemon/radio-daemon.mjs`: the D-Bus listener behind the panel buttons.
 - `panel/template.html`: the panel. Edit this file, never `panel/index.html`. It runs under a

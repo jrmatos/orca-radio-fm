@@ -3,7 +3,15 @@
 // Orca reaps idle workers after ~5 minutes, so the player is spawned detached
 // (see player.mjs) and outlives this process; deactivate leaves it running.
 
-import { isPlaying, loadStations, startPlayer, stationLabel, stopPlayer } from './player.mjs'
+import {
+  getVolume,
+  isPlaying,
+  loadStations,
+  setVolume,
+  startPlayer,
+  stationLabel,
+  stopPlayer
+} from './player.mjs'
 
 const STATIONS = loadStations()
 const PT = /^pt/i.test(process.env.LANG || '')
@@ -60,6 +68,16 @@ async function stop() {
   return { ok: true }
 }
 
+async function changeVolume(delta) {
+  const volume = Math.min(100, Math.max(0, getVolume() + delta))
+  const applied = setVolume(volume)
+  await notify(
+    'Radio FM',
+    applied ? `Volume ${volume}%` : t('Volume needs PipeWire (wpctl)', 'Volume requer PipeWire (wpctl)')
+  )
+  return { ok: applied, volume }
+}
+
 async function step(delta) {
   const base = current ?? (await lastStationIndex())
   return play((base + delta + STATIONS.length) % STATIONS.length)
@@ -77,6 +95,8 @@ export default async function activate(ctx) {
   )
   ctx.commands.register('next', () => step(1))
   ctx.commands.register('previous', () => step(-1))
+  ctx.commands.register('volume-up', () => changeVolume(10))
+  ctx.commands.register('volume-down', () => changeVolume(-10))
   ctx.log(`Radio FM ready with ${STATIONS.length} stations`)
 }
 

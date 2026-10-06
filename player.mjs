@@ -1,14 +1,18 @@
 // Shared player control for the worker and the button daemon.
 //
 // Spawns the first available local player (mpv, ffplay, cvlc), detached and
-// tagged with PLAYER_TAG so any process can find and stop it later.
+// tagged with PLAYER_TAG so any process can find and stop it later. The
+// player's audio stream is named STREAM_NAME so its volume can be changed on
+// its own (PipeWire per-stream volume) without touching the system volume.
 
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { delimiter, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const PLAYER_TAG = 'orca-radio-fm-player'
+export const STREAM_NAME = 'Orca Radio'
 const ROOT = dirname(fileURLToPath(import.meta.url))
 
 const STATIONS_DIR = join(ROOT, 'stations')
@@ -87,11 +91,25 @@ function playerEnv() {
     const runtimeDir = `/run/user/${process.getuid()}`
     if (existsSync(runtimeDir)) env.XDG_RUNTIME_DIR = runtimeDir
   }
+  // Name the audio stream for SDL (ffplay), PulseAudio clients (vlc) and native
+  // PipeWire clients alike, so setVolume() can find it.
+  env.SDL_APP_NAME = STREAM_NAME
+  env.PULSE_PROP = `application.name="${STREAM_NAME}"`
+  env.PIPEWIRE_PROPS = `{ application.name = "${STREAM_NAME}" }`
   return env
 }
 
 const PLAYERS = [
-  { bin: 'mpv', args: (url) => ['--no-video', '--really-quiet', `--title=${PLAYER_TAG}`, url] },
+  {
+    bin: 'mpv',
+    args: (url) => [
+      '--no-video',
+      '--really-quiet',
+      `--title=${PLAYER_TAG}`,
+      `--audio-client-name=${STREAM_NAME}`,
+      url
+    ]
+  },
   {
     bin: 'ffplay',
     args: (url) => ['-nodisp', '-loglevel', 'quiet', '-window_title', PLAYER_TAG, url]
@@ -130,5 +148,92 @@ export function startPlayer(url, onError = () => {}) {
   })
   child.on('error', onError)
   child.unref()
+  applyVolumeWhenReady(child.pid)
   return player.bin
+}
+
+// ---- Volume (this player's stream only; never the system volume) ----
+
+const STATE_FILE = join(
+  process.env.XDG_STATE_HOME || join(homedir(), '.local', 'state'),
+  'orca-radio-fm',
+  'state.json'
+)
+
+function readState() {
+  try {
+    return JSON.parse(readFileSync(STATE_FILE, 'utf8'))
+  } catch {
+    return {}
+  }
+}
+
+/** Saved radio volume, 0–100 (default 100). */
+export function getVolume() {
+  const volume = Number(readState().volume)
+  return Number.isFinite(volume) ? Math.min(100, Math.max(0, Math.round(volume))) : 100
+}
+
+/**
+ * PipeWire node ids of our player streams (optionally only for one pid).
+ * Returns null when PipeWire tools are missing; [] when nothing matched or the
+ * dump was unreadable (pw-dump can emit a torn document while the graph changes).
+ */
+function radioStreamIds(pid) {
+  const dump = spawnSync('pw-dump', [], { env: playerEnv(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  if (dump.error || dump.status !== 0) return null
+  let objects
+  try {
+    objects = JSON.parse(dump.stdout)
+  } catch {
+    return []
+  }
+  return objects
+    .filter((o) => {
+      const props = o.info?.props ?? {}
+      return (
+        props['media.class'] === 'Stream/Output/Audio' &&
+        props['application.name'] === STREAM_NAME &&
+        (pid === undefined || Number(props['application.process.id']) === pid)
+      )
+    })
+    .map((o) => o.id)
+}
+
+function applyVolume(ids, volume) {
+  for (const id of ids) {
+    spawnSync('wpctl', ['set-volume', String(id), (volume / 100).toFixed(2)], {
+      env: playerEnv(),
+      stdio: 'ignore'
+    })
+  }
+}
+
+/**
+ * Saves `volume` (0–100) and applies it to the radio stream that is playing.
+ * Returns false when per-stream volume is unsupported (no PipeWire tools).
+ */
+export function setVolume(volume) {
+  const value = Math.min(100, Math.max(0, Math.round(Number(volume) || 0)))
+  mkdirSync(dirname(STATE_FILE), { recursive: true })
+  writeFileSync(STATE_FILE, JSON.stringify({ ...readState(), volume: value }))
+  let ids = radioStreamIds()
+  for (let retry = 0; ids !== null && !ids.length && retry < 2 && isPlaying(); retry++) {
+    ids = radioStreamIds()
+  }
+  if (ids === null) return false
+  applyVolume(ids, value)
+  return true
+}
+
+// A fresh player's stream appears a moment after spawn (after the stream
+// connects), so poll briefly and apply the saved volume once it exists.
+function applyVolumeWhenReady(pid, attempt = 0) {
+  if (attempt > 40) return
+  setTimeout(() => {
+    const ids = radioStreamIds(pid)
+    if (ids === null) return
+    if (ids.length) applyVolume(ids, getVolume())
+    else applyVolumeWhenReady(pid, attempt + 1)
+  }, 250)
 }

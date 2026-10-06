@@ -55,7 +55,10 @@
   button:hover { background: var(--accent, #2a2a2a); color: var(--accent-foreground, #fff); }
   button.primary { background: var(--primary, #e11); color: var(--primary-foreground, #fff); border-color: transparent; }
   button:focus-visible, input:focus-visible { outline: 2px solid var(--ring, #888); outline-offset: 1px; }
-  input {
+  .volume { display: flex; align-items: center; gap: 8px; color: var(--muted-foreground, #999); font-size: 12px; }
+  .volume input { flex: 1; min-width: 0; accent-color: var(--primary, #e11); }
+  .volume output { min-width: 3.5ch; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=search] {
     font: inherit;
     width: 100%;
     color: var(--foreground, #eee);
@@ -113,6 +116,11 @@
       <button id="toggle" class="primary"></button>
       <button id="next">⏭</button>
     </div>
+    <div class="volume" id="volumeRow">
+      <span aria-hidden="true">🔈</span>
+      <input type="range" id="volume" min="0" max="100" step="5" value="100" />
+      <output id="volumeLabel" for="volume"></output>
+    </div>
     <div class="status" id="status"></div>
   </section>
 
@@ -138,6 +146,7 @@
         next: 'Próxima estação', search: 'Buscar rádio, cidade ou país…', none: 'Nenhuma rádio encontrada.',
         stopTitle: '⏹ Parar rádio', noNotify: 'Notificações do sistema indisponíveis — use a paleta “Radio:”.',
         timeout: 'Orca não respondeu', howTitle: 'Como funciona',
+        volume: 'Volume da rádio (não altera o volume do sistema)',
         howBody: 'O painel do Orca não pode tocar áudio. Cada botão mostra uma notificação do Orca, e o serviço <code>orca-radio-fm</code> (daemon/install.sh) a recebe e toca a rádio com mpv/ffplay/vlc. Sem o serviço, use a paleta (<code>Radio:</code>) ou <kbd>Ctrl+Alt+Shift+P</kbd> / <kbd>N</kbd> / <kbd>B</kbd>.'
       }
     : {
@@ -146,6 +155,7 @@
         next: 'Next station', search: 'Search station, city or country…', none: 'No stations found.',
         stopTitle: '⏹ Stop radio', noNotify: 'System notifications unavailable — use the "Radio:" palette commands.',
         timeout: 'Orca did not respond', howTitle: 'How it works',
+        volume: 'Radio volume (does not change the system volume)',
         howBody: 'Orca panels cannot play audio. Each button shows an Orca notification; the <code>orca-radio-fm</code> service (daemon/install.sh) picks it up and plays the station with mpv/ffplay/vlc. Without the service, use the palette (<code>Radio:</code>) or <kbd>Ctrl+Alt+Shift+P</kbd> / <kbd>N</kbd> / <kbd>B</kbd>.'
       }
 
@@ -287,6 +297,19 @@
       list.append(h, ul)
     }
   }
+
+  // The panel cannot read the saved volume back, so the label stays blank
+  // until the slider is used in this session.
+  let volumeTimer = null
+  $('volumeRow').title = T.volume
+  $('volume').setAttribute('aria-label', T.volume)
+  $('volume').addEventListener('input', (e) => {
+    $('volumeLabel').textContent = `${e.target.value}%`
+  })
+  $('volume').addEventListener('change', (e) => {
+    clearTimeout(volumeTimer)
+    volumeTimer = setTimeout(() => announce(`🔊 Volume ${e.target.value}%`), 400)
+  })
 
   $('prev').title = $('prev').ariaLabel = T.prev
   $('next').title = $('next').ariaLabel = T.next

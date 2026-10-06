@@ -8,18 +8,20 @@
 //
 //   "<publisher>.<id>: ▶ <station label>"  → play that station
 //   "<publisher>.<id>: ⏹ …"                → stop
+//   "<publisher>.<id>: 🔊 Volume 40%"      → set the radio stream's volume
 //
 // Anything else (including the worker's own "Radio FM" notifications) is ignored.
 
 import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { loadStations, startPlayer, stationLabel, stopPlayer } from '../player.mjs'
+import { loadStations, setVolume, startPlayer, stationLabel, stopPlayer } from '../player.mjs'
 
 const manifest = JSON.parse(readFileSync(new URL('../orca-plugin.json', import.meta.url), 'utf8'))
 // Orca prefixes plugin notification titles with the qualified plugin key.
 const PREFIX = `${manifest.publisher}.${manifest.id}: `
 const PLAY = '▶ '
 const STOP = '⏹'
+const VOLUME = /^🔊 Volume (\d{1,3})%$/
 // GNOME relays each Notify through the shell, so the monitor sees it twice.
 const DEDUPE_MS = 1500
 
@@ -37,6 +39,12 @@ function handle(summary) {
   if (title.startsWith(STOP)) {
     stopPlayer()
     console.log('stop')
+    return
+  }
+  const volume = VOLUME.exec(title)
+  if (volume) {
+    const applied = setVolume(Number(volume[1]))
+    console.log(`volume ${volume[1]}%${applied ? '' : ' (saved; PipeWire tools not found, not applied)'}`)
     return
   }
   if (!title.startsWith(PLAY)) return

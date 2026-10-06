@@ -3,7 +3,7 @@
   "id": "radio-fm",
   "publisher": "jrmatos",
   "name": "Radio FM",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Radio panel for Orca: Jovem Pan FM in 23 Brazilian cities plus other stations, easy to extend with radios from any country. Plays through mpv, ffplay or vlc.",
   "author": {
     "name": "Paulo Matos",
@@ -40,6 +40,14 @@
       {
         "id": "previous",
         "title": "Radio: Previous station"
+      },
+      {
+        "id": "volume-up",
+        "title": "Radio: Volume up"
+      },
+      {
+        "id": "volume-down",
+        "title": "Radio: Volume down"
       },
       {
         "id": "play.jovem-pan-fm-sao-paulo",
